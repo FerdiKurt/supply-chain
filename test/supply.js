@@ -1,5 +1,5 @@
 const SupplyChain = artifacts.require('SupplyChain.sol')
-const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers');
+const { expectRevert, expectEvent } = require('@openzeppelin/test-helpers')
 
 function toBN(arg) {
     return web3.utils.toBN(arg)
