@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity >=0.8.0 <0.9.0;
 
 import './Ownable.sol';
-import './SafeMath.sol';
 
-contract SupplyChain is Ownable{
-    using SafeMath for uint;
- 
-    mapping (bytes32 => S_Item) public items;
-    mapping (address => mapping(bytes32 => S_Delivery)) public deliveries;
+contract SupplyChain is Ownable {
+    mapping (bytes32 => Item) public items;
+    mapping (address => mapping(bytes32 => Delivery)) public deliveries;
     
     event ItemAdded(string description, uint amount, uint price);
     event ItemOrderedBy(address indexed buyer, bytes32 itemId, uint orderedAmount, State state);
@@ -21,13 +18,13 @@ contract SupplyChain is Ownable{
         DELIVERED
     }
     
-    struct S_Delivery {
+    struct Delivery {
         uint numOfItems;
         uint fulfilledPayment;
         State state;
     }
 
-    struct S_Item {
+    struct Item {
         bytes32 id;
         uint availableAmount;
         uint soldAmount;
@@ -41,7 +38,7 @@ contract SupplyChain is Ownable{
         uint _price
     ) public onlyOwner() {
         items[_id].id = _id;
-        items[_id].availableAmount += items[_id].availableAmount.add(_availableAmount);
+        items[_id].availableAmount += _availableAmount;
         items[_id].itemPrice = _price;
         
         emit ItemAdded (_description, items[_id].availableAmount, _price);
@@ -49,13 +46,13 @@ contract SupplyChain is Ownable{
     
     function orderItem(bytes32 _id, uint _amount) public payable{
         require(_amount <= items[_id].availableAmount, 'Not enough items left!');
-        require(msg.value == items[_id].itemPrice.mul(_amount), 'Only full payment accepted!');
+        require(msg.value == items[_id].itemPrice * _amount, 'Only full payment accepted!');
         
-        items[_id].availableAmount = items[_id].availableAmount.sub(_amount);
-        items[_id].soldAmount = items[_id].soldAmount.add(_amount);
+        items[_id].availableAmount -= _amount;
+        items[_id].soldAmount += _amount;
 
-        deliveries[msg.sender][_id].numOfItems = deliveries[msg.sender][_id].numOfItems.add(_amount);
-        deliveries[msg.sender][_id].fulfilledPayment = deliveries[msg.sender][_id].fulfilledPayment.add(msg.value);
+        deliveries[msg.sender][_id].numOfItems += _amount;
+        deliveries[msg.sender][_id].fulfilledPayment += msg.value;
         deliveries[msg.sender][_id].state = State.ORDERED;
         
         if (items[_id].availableAmount < 5) {
