@@ -1,2 +1,2 @@
 # Supply Chain
-Example for demonstrating structs and events.
+*Example for demonstrating structs and events.*
